@@ -57,6 +57,13 @@ export class GoDirectDatasource extends Datasource {
       return null;
     }
 
+    logger.info(
+      {
+        datasource: source.datasource,
+      },
+      'data source'
+    );
+
     switch (source.datasource) {
       case GitTagsDatasource.id: {
         res = await this.git.getReleases(source);
