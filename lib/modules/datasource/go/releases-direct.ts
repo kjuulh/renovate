@@ -57,12 +57,22 @@ export class GoDirectDatasource extends Datasource {
       return null;
     }
 
+    logger.info(
+      {
+        source: source,
+      },
+      'go.getReleases datasource'
+    );
+
     switch (source.datasource) {
       case GitTagsDatasource.id: {
+        logger.info('go.getReleases git tags');
+
         res = await this.git.getReleases(source);
         break;
       }
       case GithubTagsDatasource.id: {
+        logger.info('go.getReleases github tags');
         res = await this.github.getReleases(source);
         break;
       }
@@ -93,12 +103,12 @@ export class GoDirectDatasource extends Datasource {
      * the old behaviour stays the same.
      */
     const nameParts = packageName.replace(regEx(/\/v\d+$/), '').split('/');
-    logger.trace({ nameParts, releases: res.releases }, 'go.getReleases');
+    logger.info({ nameParts, releases: res.releases }, 'go.getReleases');
 
     // If it has more than 3 parts it's a submodule or subgroup (gitlab only)
     if (nameParts.length > 3) {
       const prefix = nameParts.slice(3, nameParts.length).join('/');
-      logger.trace(`go.getReleases.prefix:${prefix}`);
+      logger.info(`go.getReleases.prefix:${prefix}`);
 
       // Filter the releases so that we only get the ones that are for this submodule
       // Also trim the submodule prefix from the version number
@@ -109,7 +119,7 @@ export class GoDirectDatasource extends Datasource {
           r2.version = r2.version.replace(`${prefix}/`, '');
           return r2;
         });
-      logger.trace({ submodReleases }, 'go.getReleases');
+      logger.info({ submodReleases }, 'go.getReleases');
 
       // If not from gitlab -> no subgroups -> must be submodule
       // If from gitlab and directory one level above has tags -> has to be submodule, since groups can't have tags
@@ -130,6 +140,14 @@ export class GoDirectDatasource extends Datasource {
         release.version?.startsWith('v')
       );
     }
+
+    logger.info(
+      {
+        res: res,
+        sourceUrl,
+      },
+      'go.getReleases final'
+    );
 
     return { ...res, sourceUrl };
   }
