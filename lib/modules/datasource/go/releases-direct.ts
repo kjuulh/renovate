@@ -135,6 +135,28 @@ export class GoDirectDatasource extends Datasource {
       }
     }
 
+    if (nameParts.length > 1) {
+      const prefix = nameParts[nameParts.length - 1];
+      logger.info(`go.getReleases.prefix:${prefix}`);
+
+      const submodReleases = res.releases
+        .filter((release) => release.version?.startsWith(prefix))
+        .map((release) => {
+          const r2 = release;
+          r2.version = r2.version.replace(`${prefix}/`, '');
+          return r2;
+        })
+        .filter((release) => release.version?.startsWith('v'));
+      logger.info({ submodReleases }, 'go.getReleases');
+
+      if (submodReleases.length > 0) {
+        return {
+          sourceUrl,
+          releases: submodReleases,
+        };
+      }
+    }
+
     if (res.releases) {
       res.releases = res.releases.filter((release) =>
         release.version?.startsWith('v')

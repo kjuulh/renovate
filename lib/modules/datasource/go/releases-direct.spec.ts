@@ -318,5 +318,101 @@ describe('modules/datasource/go/releases-direct', () => {
         { version: 'v3.0.0', gitRef: 'b/v3.0.0' },
       ]);
     });
+
+    it('parses nameparts length=1', async () => {
+      getDatasourceSpy.mockResolvedValueOnce({
+        datasource: 'github-tags',
+        packageName: '',
+        registryUrl: 'https://go.company.com',
+      });
+      const pkg = { packageName: 'go.company.com/b' };
+
+      githubGetTags.mockResolvedValue({
+        releases: [
+          { version: 'a/v1.0.0', gitRef: 'a/v1.0.0' },
+          { version: 'v5.0.0', gitRef: 'v5.0.0' },
+          { version: 'b/v2.0.0', gitRef: 'b/v2.0.0' },
+          { version: 'b/v3.0.0', gitRef: 'b/v3.0.0' },
+        ],
+      });
+      const result = await datasource.getReleases(pkg);
+      expect(result?.releases).toEqual([
+        { version: 'v2.0.0', gitRef: 'b/v2.0.0' },
+        { version: 'v3.0.0', gitRef: 'b/v3.0.0' },
+      ]);
+    });
+
+    it('parses nameparts length=2', async () => {
+      getDatasourceSpy.mockResolvedValueOnce({
+        datasource: 'github-tags',
+        packageName: 'some-package',
+        registryUrl: 'https://go.company.com',
+      });
+      const pkg = { packageName: 'go.company.com/some-package/b' };
+
+      githubGetTags.mockResolvedValue({
+        releases: [
+          { version: 'a/v1.0.0', gitRef: 'a/v1.0.0' },
+          { version: 'v5.0.0', gitRef: 'v5.0.0' },
+          { version: 'b/v2.0.0', gitRef: 'b/v2.0.0' },
+          { version: 'b/v3.0.0', gitRef: 'b/v3.0.0' },
+        ],
+      });
+      const result = await datasource.getReleases(pkg);
+      expect(result?.releases).toEqual([
+        { version: 'v2.0.0', gitRef: 'b/v2.0.0' },
+        { version: 'v3.0.0', gitRef: 'b/v3.0.0' },
+      ]);
+    });
+
+    it('parses nameparts length=4', async () => {
+      getDatasourceSpy.mockResolvedValueOnce({
+        datasource: 'github-tags',
+        packageName: 'some-package/some-path',
+        registryUrl: 'https://go.company.com',
+      });
+      const pkg = {
+        packageName: 'go.company.com/some-package/some-path/b',
+      };
+
+      githubGetTags.mockResolvedValue({
+        releases: [
+          { version: 'a/v1.0.0', gitRef: 'a/v1.0.0' },
+          { version: 'v5.0.0', gitRef: 'v5.0.0' },
+          { version: 'b/v2.0.0', gitRef: 'b/v2.0.0' },
+          { version: 'b/v3.0.0', gitRef: 'b/v3.0.0' },
+        ],
+      });
+      const result = await datasource.getReleases(pkg);
+      expect(result?.releases).toEqual([
+        { version: 'v2.0.0', gitRef: 'b/v2.0.0' },
+        { version: 'v3.0.0', gitRef: 'b/v3.0.0' },
+      ]);
+    });
+
+    it('parses nameparts length=5', async () => {
+      getDatasourceSpy.mockResolvedValueOnce({
+        datasource: 'github-tags',
+        packageName: 'some-package/some-path/some-other-path',
+        registryUrl: 'https://go.company.com',
+      });
+      const pkg = {
+        packageName: 'go.company.com/some-package/some-path/some-other-path/b',
+      };
+
+      githubGetTags.mockResolvedValue({
+        releases: [
+          { version: 'a/v1.0.0', gitRef: 'a/v1.0.0' },
+          { version: 'v5.0.0', gitRef: 'v5.0.0' },
+          { version: 'b/v2.0.0', gitRef: 'b/v2.0.0' },
+          { version: 'b/v3.0.0', gitRef: 'b/v3.0.0' },
+        ],
+      });
+      const result = await datasource.getReleases(pkg);
+      expect(result?.releases).toEqual([
+        { version: 'v2.0.0', gitRef: 'b/v2.0.0' },
+        { version: 'v3.0.0', gitRef: 'b/v3.0.0' },
+      ]);
+    });
   });
 });
