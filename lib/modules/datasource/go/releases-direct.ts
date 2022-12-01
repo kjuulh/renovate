@@ -105,6 +105,28 @@ export class GoDirectDatasource extends Datasource {
     const nameParts = packageName.replace(regEx(/\/v\d+$/), '').split('/');
     logger.info({ nameParts, releases: res.releases }, 'go.getReleases');
 
+    if (nameParts.length > 1 && nameParts.length <= 3) {
+      const prefix = nameParts[nameParts.length - 1];
+      logger.info(`go.getReleases.prefix:${prefix}`);
+
+      const submodReleases = res.releases
+        .filter((release) => release.version?.startsWith(prefix))
+        .map((release) => {
+          const r2 = release;
+          r2.version = r2.version.replace(`${prefix}/`, '');
+          return r2;
+        })
+        .filter((release) => release.version?.startsWith('v'));
+      logger.info({ submodReleases }, 'go.getReleases');
+
+      if (submodReleases.length > 0) {
+        return {
+          sourceUrl,
+          releases: submodReleases,
+        };
+      }
+    }
+
     // If it has more than 3 parts it's a submodule or subgroup (gitlab only)
     if (nameParts.length > 3) {
       const prefix = nameParts.slice(3, nameParts.length).join('/');
@@ -128,28 +150,6 @@ export class GoDirectDatasource extends Datasource {
         !(source.datasource === GitlabTagsDatasource.id) ||
         (source.datasource === GitlabTagsDatasource.id && submodReleases.length)
       ) {
-        return {
-          sourceUrl,
-          releases: submodReleases,
-        };
-      }
-    }
-
-    if (nameParts.length > 1) {
-      const prefix = nameParts[nameParts.length - 1];
-      logger.info(`go.getReleases.prefix:${prefix}`);
-
-      const submodReleases = res.releases
-        .filter((release) => release.version?.startsWith(prefix))
-        .map((release) => {
-          const r2 = release;
-          r2.version = r2.version.replace(`${prefix}/`, '');
-          return r2;
-        })
-        .filter((release) => release.version?.startsWith('v'));
-      logger.info({ submodReleases }, 'go.getReleases');
-
-      if (submodReleases.length > 0) {
         return {
           sourceUrl,
           releases: submodReleases,
